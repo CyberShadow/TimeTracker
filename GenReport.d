@@ -120,7 +120,7 @@ PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
 "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
- <title>TimeTracker work graph</title>
+ <title>TimeTracker report</title>
  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1"/>
  <style type="text/css">
   body {
@@ -172,7 +172,7 @@ PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
   </ul>
 </body>
 </html>`;
-	write("graph.html", html);
+	write("report.html", html);
 }
 
 const string[] weekdays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
