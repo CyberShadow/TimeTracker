@@ -34,6 +34,20 @@ void toggle()
 	Shell_NotifyIcon(NIM_MODIFY, &data);
 }
 
+void quit()
+{
+	if (working)
+		toggle();
+	
+	NOTIFYICONDATA data;
+	ZeroMemory(&data, sizeof(data));
+	data.cbSize = NOTIFYICONDATA_V1_SIZE;
+	data.hWnd = hWnd;
+	Shell_NotifyIcon(NIM_DELETE, &data);
+
+	ExitProcess(0);
+}
+
 void gen_report()
 {
 	STARTUPINFO si;
@@ -62,9 +76,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 					toggle();
 					break;
 				case WM_MBUTTONDOWN:
-					if (working)
-						toggle();
-					ExitProcess(0);
+					quit();
 				case WM_RBUTTONDOWN:
 					POINT pt;
 					GetCursorPos(&pt);
@@ -83,9 +95,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 					ShellExecute(hWnd, "open", "report.html", NULL, NULL, SW_SHOW);
 					break;
 				case ID_EXIT:
-					if (working)
-						toggle();
-					ExitProcess(0);
+					quit();
 			}
 			break;
 	}
