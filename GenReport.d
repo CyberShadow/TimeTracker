@@ -10,6 +10,7 @@ void main()
 	int days;
 	d_time start;
 	d_time[] totals;
+	d_time total;
 
 	struct Segment { d_time start, duration; string task; }
 	Segment[] segments;
@@ -37,6 +38,8 @@ void main()
 		if (day >= totals.length)
 			totals.length = day+1;
 		totals[day] += stop - start;
+		
+		total += stop-start;
 
 		if (!(task in taskLookup))
 		{
@@ -169,6 +172,7 @@ PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
   <ul>
    ` ~ join(taskLines, `
    `) ~ `
+   <li>Total: <code>` ~ format(`%d:%02d`, total/TicksPerHour, total%TicksPerHour/TicksPerMinute) ~ `</code></li>
   </ul>
 </body>
 </html>`;
