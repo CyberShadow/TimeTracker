@@ -1,13 +1,17 @@
 #include <windows.h>
-#include <tchar.h>
 #include <stdio.h>
 #include <time.h>
 
 #define WM_ICONNOTIFY (WM_USER+1)
 
+#define ID_TOGGLE 1
+#define ID_REPORT 2
+#define ID_EXIT 3
+
 HICON iconWork, iconPlay;
 HWND hWnd;
 BOOL working;
+HMENU hMenu;
 
 void toggle()
 {
@@ -30,6 +34,23 @@ void toggle()
 	Shell_NotifyIcon(NIM_MODIFY, &data);
 }
 
+void gen_report()
+{
+	STARTUPINFO si;
+	PROCESS_INFORMATION pi;
+	ZeroMemory(&si, sizeof(si));
+	si.dwFlags = STARTF_USESHOWWINDOW;
+	si.wShowWindow = SW_HIDE;
+	if (!CreateProcess(NULL, "GenReport.exe", NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi))
+	{
+		MessageBox(hWnd, "Failed to run GenReport.exe", "Error", MB_ICONERROR);
+		return;
+	}
+	WaitForSingleObject(pi.hProcess, INFINITE);
+	CloseHandle(pi.hProcess);
+	CloseHandle(pi.hThread);
+}
+
 LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	switch (uMsg)
@@ -41,6 +62,27 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 					toggle();
 					break;
 				case WM_MBUTTONDOWN:
+					if (working)
+						toggle();
+					ExitProcess(0);
+				case WM_RBUTTONDOWN:
+					POINT pt;
+					GetCursorPos(&pt);
+					TrackPopupMenu(hMenu, 0, pt.x, pt.y, 0, hWnd, NULL); 
+					break;
+			}		
+			break;
+		case WM_COMMAND:
+			switch(LOWORD(wParam))
+			{
+				case ID_TOGGLE:
+					toggle();
+					break;
+				case ID_REPORT:
+					gen_report();
+					ShellExecute(hWnd, "open", "report.html", NULL, NULL, SW_SHOW);
+					break;
+				case ID_EXIT:
 					if (working)
 						toggle();
 					ExitProcess(0);
@@ -86,6 +128,11 @@ void main()
 	strcpy(data.szTip, "TimeTracker");
 
 	Shell_NotifyIcon(NIM_ADD, &data);
+
+	hMenu = CreatePopupMenu();
+	AppendMenu(hMenu, MF_STRING, ID_TOGGLE, "Start/stop work");
+	AppendMenu(hMenu, MF_STRING, ID_REPORT, "Generate &report");
+	AppendMenu(hMenu, MF_STRING, ID_EXIT, "E&xit");
 
     MSG msg;
     while (GetMessage(&msg, NULL, 0, 0))
