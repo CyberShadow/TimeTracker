@@ -2,6 +2,7 @@ import std.file;
 import std.string;
 import std.date;
 import std.c.stdio;
+import std.c.time;
 import crc32;
 
 void main()
@@ -22,8 +23,7 @@ void main()
 
 	void stopWork(d_time stop, int day)
 	{
-		if (!start)
-			throw new Exception("Work never started");
+		assert(start);
 		long startDay = start/TicksPerDay - firstDay;
 		if (day == startDay)
 			segments ~= Segment(start, stop-start, task);
@@ -52,12 +52,8 @@ void main()
 		start = 0;
 	}
 
-	foreach (line; splitlines(cast(string)read("worklog.txt")))
+	static d_time parseTime(string timeStr)
 	{
-		if (line.length==0 || line[0] != '[')
-			continue;
-		line = line[1..$];
-		string timeStr = line[0..line.find("]")];
 		char[4] weekday, monthStr;
 		int date, hour, minute, second, year, month;
 		int n = sscanf(timeStr.toStringz(), "%3s %3s %d %d:%d:%d %d".toStringz(), weekday.ptr, monthStr.ptr, &date, &hour, &minute, &second, &year);
@@ -69,7 +65,25 @@ void main()
 				month = m;
 		if (month == -1)
 			throw new Exception("Invalid month: " ~ monthStr[0..3]);
-		d_time time = MakeDate(MakeDay(year, month, date), MakeTime(hour, minute, second, 0));
+		return MakeDate(MakeDay(year, month, date), MakeTime(hour, minute, second, 0));
+	}
+
+	string[] lines = splitlines(cast(string)read("worklog.txt"));
+
+	// Add finishing line in case work is still ongoing
+	{
+		time_t t;
+		time(&t);
+		char* timestr = ctime(&t);
+		lines ~= format("[%s] End", strip(std.string.toString(timestr)));
+	}
+
+	foreach (line; lines)
+	{
+		if (line.length==0 || line[0] != '[')
+			continue;
+		line = line[1..$];
+		d_time time = parseTime(line[0..line.find("]")]);
 		if (firstDay == 0)
 			firstDay = time / TicksPerDay;
 		int day = cast(int)(time / TicksPerDay - firstDay);
@@ -80,7 +94,17 @@ void main()
 			start = time;
 		else
 		if (line == "Work stopped")
+		{
+			if (!start)
+				throw new Exception("Work never started");
 			stopWork(time, day);
+		}
+		else
+		if (line == "End")
+		{
+			if (start)
+				stopWork(time, day);
+		}
 		else
 		if (line.length > 6 && line[0..6]=="Task: ")
 		{
@@ -94,7 +118,7 @@ void main()
 		else
 			throw new Exception("Unknown string " ~ line);
 	}
-
+	
 	string[] hours;
 	for (int i=0; i<24; i++)
 		hours ~= format(`<div style="left: %8.4f%%">%2d</div>`, i/24.0*100, i);
