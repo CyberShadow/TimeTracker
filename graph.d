@@ -2,6 +2,7 @@ import std.file;
 import std.string;
 import std.date;
 import std.c.stdio;
+import crc32;
 
 void main()
 {
@@ -10,8 +11,30 @@ void main()
 	d_time start;
 	d_time[] totals;
 
-	struct Segment { d_time start, duration; }
+	struct Segment { d_time start, duration; string task; }
 	Segment[] segments;
+	string task;
+
+	void finishTask(d_time stop, int day)
+	{
+		if (!start)
+			throw new Exception("Work never started");
+		long startDay = start/TicksPerDay - firstDay;
+		if (day == startDay)
+			segments ~= Segment(start, stop-start, task);
+		else
+		{
+			if (day - startDay > 1)
+				throw new Exception("Work took longer than a day");
+			segments ~= Segment(start, (day+firstDay)*TicksPerDay - start, task);
+			segments ~= Segment((day+firstDay)*TicksPerDay, stop%TicksPerDay, task);
+		}
+
+		if (day >= totals.length)
+			totals.length = day+1;
+		totals[day] += stop - start;
+		start = 0;
+	}
 
 	foreach (line; splitlines(cast(string)read("worklog.txt")))
 	{
@@ -37,35 +60,23 @@ void main()
 		if (day >= days)
 			days = cast(int)day+1;
 		line = line[line.find("]")+2..$];
-		switch(line)
+		if (line == "Work started")
+			start = time;
+		else
+		if (line == "Work stopped")
+			finishTask(time, day);
+		else
+		if (line.length > 6 && line[0..6]=="Task: ")
 		{
-			case "Work started":
-				start = time;
-				break;
-			case "Work stopped":
+			if (start)
 			{
-				if (!start)
-					throw new Exception("Work never started");
-				long startDay = start/TicksPerDay - firstDay;
-				if (day == startDay)
-					segments ~= Segment(start, time-start);
-				else
-				{
-					if (day - startDay > 1)
-						throw new Exception("Work took longer than a day");
-					segments ~= Segment(start, (day+firstDay)*TicksPerDay - start);
-					segments ~= Segment((day+firstDay)*TicksPerDay, time%TicksPerDay);
-				}
-
-				if (day >= totals.length)
-					totals.length = day+1;
-				totals[day] += time - start;
-				start = 0;
-				break;
+				finishTask(time, day);
+				start = time;
 			}
-			default:
-				throw new Exception("Unknown string " ~ line);
+			task = line[6..$];
 		}
+		else
+			throw new Exception("Unknown string " ~ line);
 	}
 
 	string[] hours;
@@ -84,7 +95,7 @@ void main()
 
 	string[] bars;
 	foreach (s; segments)
-		bars ~= format(`<div style="top: %dpx; left: %8.4f%%; width: %2.4f%%"></div>`, 21 + 24*(s.start/TicksPerDay-firstDay), (s.start%TicksPerDay)*100.0/TicksPerDay, s.duration*100.0/TicksPerDay);
+		bars ~= format(`<div style="top: %dpx; left: %8.4f%%; width: %2.4f%%; background-color: #%06X" title='%s'></div>`, 21 + 24*(s.start/TicksPerDay-firstDay), (s.start%TicksPerDay)*100.0/TicksPerDay, s.duration*100.0/TicksPerDay, strcrc32(s.task)&0xFFFFFF, s.task);
 
 	string html = `
 <!DOCTYPE html
