@@ -80,6 +80,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 				case WM_RBUTTONDOWN:
 					POINT pt;
 					GetCursorPos(&pt);
+					SetForegroundWindow(hWnd);
 					TrackPopupMenu(hMenu, 0, pt.x, pt.y, 0, hWnd, NULL); 
 					break;
 			}		
