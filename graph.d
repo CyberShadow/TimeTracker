@@ -15,7 +15,11 @@ void main()
 	Segment[] segments;
 	string task;
 
-	void finishTask(d_time stop, int day)
+	struct Task { string name; d_time time; }
+	Task[] tasks;
+	int[string] taskLookup;
+
+	void stopWork(d_time stop, int day)
 	{
 		if (!start)
 			throw new Exception("Work never started");
@@ -33,6 +37,15 @@ void main()
 		if (day >= totals.length)
 			totals.length = day+1;
 		totals[day] += stop - start;
+
+		if (!(task in taskLookup))
+		{
+			taskLookup[task] = tasks.length;
+			tasks ~= Task(task, stop - start);
+		}
+		else
+			tasks[taskLookup[task]].time += stop - start;
+
 		start = 0;
 	}
 
@@ -64,13 +77,13 @@ void main()
 			start = time;
 		else
 		if (line == "Work stopped")
-			finishTask(time, day);
+			stopWork(time, day);
 		else
 		if (line.length > 6 && line[0..6]=="Task: ")
 		{
 			if (start)
 			{
-				finishTask(time, day);
+				stopWork(time, day);
 				start = time;
 			}
 			task = line[6..$];
@@ -96,6 +109,10 @@ void main()
 	string[] bars;
 	foreach (s; segments)
 		bars ~= format(`<div style="top: %dpx; left: %8.4f%%; width: %2.4f%%; background-color: #%06X" title='%s'></div>`, 21 + 24*(s.start/TicksPerDay-firstDay), (s.start%TicksPerDay)*100.0/TicksPerDay, s.duration*100.0/TicksPerDay, strcrc32(s.task)&0xFFFFFF, s.task);
+
+	string[] taskLines;
+	foreach (t; tasks)
+		taskLines ~= format(`<li><div class="box" style="background-color: #%06X"></div> <code>%02d:%02d - %s</code></li>`, strcrc32(t.name)&0xFFFFFF, t.time/TicksPerHour, t.time%TicksPerHour/TicksPerMinute, t.name);
 
 	string html = `
 <!DOCTYPE html
@@ -132,9 +149,8 @@ PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
     border-collapse: collapse;
   }
   tr, td { margin: 0; padding: 0; }
-  tr {
-    height: 24px;
-  }
+  tr { height: 24px; }
+  .box { position: relative; top: 3px; width: 1em; height: 1em; display: inline-block; }
   </style>
 </head>
 <body>
@@ -150,6 +166,10 @@ PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
    <tr>` ~ join(rows, `</tr>
    <tr>`) ~ `</tr>
   </table>
+  <ul>
+   ` ~ join(taskLines, `
+   `) ~ `
+  </ul>
 </body>
 </html>`;
 	write("graph.html", html);
