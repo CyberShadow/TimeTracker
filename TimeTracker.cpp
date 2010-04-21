@@ -161,4 +161,5 @@ void main()
         TranslateMessage(&msg);
         DispatchMessage(&msg);
     }
+    quit();
 }
