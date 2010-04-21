@@ -5,16 +5,17 @@
 void main()
 {
 	char* cmdline = GetCommandLine();
+	printf("cmdline=%s\n", cmdline);
 
 	if (*cmdline=='"')
 		do ; while(*++cmdline != '"');
 	do ; while(*++cmdline != ' ' && *cmdline != 0);
+	while (*cmdline==' ') cmdline++;
 	if (*cmdline == 0)
 	{
 		printf("No task specified\n");
 		return;
 	}
-	cmdline++;
 
 	time_t t;
 	time(&t);
