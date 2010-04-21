@@ -15,7 +15,7 @@ void main()
 
 	struct Segment { d_time start, duration; string task; }
 	Segment[] segments;
-	string task;
+	string task = "Unspecified task";
 
 	struct Task { string name; d_time time; }
 	Task[] tasks;
