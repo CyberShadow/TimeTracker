@@ -6,8 +6,9 @@
 
 #define ID_TOGGLE 1
 #define ID_TASK 2
-#define ID_REPORT 3
-#define ID_EXIT 4
+#define ID_EDIT 3
+#define ID_REPORT 4
+#define ID_EXIT 5
 
 HICON iconWork, iconPlay;
 HWND hWnd;
@@ -95,6 +96,9 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 				case ID_TASK:
 					ShellExecute(hWnd, "open", "taskprompt.bat", NULL, NULL, SW_SHOW);
 					break;
+				case ID_EDIT:
+					ShellExecute(hWnd, "open", "worklog.txt", NULL, NULL, SW_SHOW);
+					break;
 				case ID_REPORT:
 					gen_report();
 					ShellExecute(hWnd, "open", "report.html", NULL, NULL, SW_SHOW);
@@ -147,6 +151,7 @@ void main()
 	hMenu = CreatePopupMenu();
 	AppendMenu(hMenu, MF_STRING, ID_TOGGLE, "Start/stop &work");
 	AppendMenu(hMenu, MF_STRING, ID_TASK, "Set &task");
+	AppendMenu(hMenu, MF_STRING, ID_EDIT, "&Edit log");
 	AppendMenu(hMenu, MF_STRING, ID_REPORT, "Generate &report");
 	AppendMenu(hMenu, MF_STRING, ID_EXIT, "E&xit");
 
