@@ -5,8 +5,9 @@
 #define WM_ICONNOTIFY (WM_USER+1)
 
 #define ID_TOGGLE 1
-#define ID_REPORT 2
-#define ID_EXIT 3
+#define ID_TASK 2
+#define ID_REPORT 3
+#define ID_EXIT 4
 
 HICON iconWork, iconPlay;
 HWND hWnd;
@@ -91,6 +92,9 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 				case ID_TOGGLE:
 					toggle();
 					break;
+				case ID_TASK:
+					ShellExecute(hWnd, "open", "taskprompt.bat", NULL, NULL, SW_SHOW);
+					break;
 				case ID_REPORT:
 					gen_report();
 					ShellExecute(hWnd, "open", "report.html", NULL, NULL, SW_SHOW);
@@ -141,7 +145,8 @@ void main()
 	Shell_NotifyIcon(NIM_ADD, &data);
 
 	hMenu = CreatePopupMenu();
-	AppendMenu(hMenu, MF_STRING, ID_TOGGLE, "Start/stop work");
+	AppendMenu(hMenu, MF_STRING, ID_TOGGLE, "Start/stop &work");
+	AppendMenu(hMenu, MF_STRING, ID_TASK, "Set &task");
 	AppendMenu(hMenu, MF_STRING, ID_REPORT, "Generate &report");
 	AppendMenu(hMenu, MF_STRING, ID_EXIT, "E&xit");
 
