@@ -10,10 +10,21 @@
 #define ID_REPORT 4
 #define ID_EXIT 5
 
-HICON iconWork, iconPlay;
+HICON iconWork, iconPlay, iconFlash;
 HWND hWnd;
-BOOL working;
+BOOL working, blinking;
 HMENU hMenu;
+
+void setIcon(HICON icon)
+{
+	NOTIFYICONDATA data;
+	ZeroMemory(&data, sizeof(data));
+	data.cbSize = NOTIFYICONDATA_V1_SIZE;
+	data.hWnd = hWnd;
+	data.uFlags = NIF_ICON;
+	data.hIcon = icon;
+	Shell_NotifyIcon(NIM_MODIFY, &data);
+}
 
 void toggle()
 {
@@ -26,14 +37,8 @@ void toggle()
 	FILE* f = fopen("worklog.txt", "at");
 	fprintf(f, "[%s] Work %s\n", timestr, working ? "started" : "stopped");
 	fclose(f);
-	
-	NOTIFYICONDATA data;
-	ZeroMemory(&data, sizeof(data));
-	data.cbSize = NOTIFYICONDATA_V1_SIZE;
-	data.hWnd = hWnd;
-	data.uFlags = NIF_ICON;
-	data.hIcon = working ? iconWork : iconPlay;
-	Shell_NotifyIcon(NIM_MODIFY, &data);
+
+	setIcon(working ? iconWork : iconPlay);
 }
 
 void quit()
@@ -112,13 +117,48 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	return DefWindowProc(hWnd, uMsg, wParam, lParam);
 }
 
+VOID CALLBACK toysTimerProc(HWND hwnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime)
+{
+	if (!working)
+		return;
+	if (blinking)
+	{
+		setIcon(iconWork);
+		blinking = false;
+	}
+	else
+	{
+		FILE* f = fopen("toys.txt", "rt");
+		if (f==NULL)
+			return;
+		
+		char active[1024], line[1024];
+		GetWindowText(GetForegroundWindow(), active, 1024);
+		
+		while (fgets(line, 1024, f))
+		{
+			int l;
+			while ((l=strlen(line))>0 && (line[l-1]==13 || line[l-1]==10))
+				line[l-1] = 0;
+			if (strstr(active, line))
+			{
+				setIcon(iconFlash);
+				blinking = true;
+				break;
+			}
+		}
+		fclose(f);
+	}
+}
+
 void main()
 {
 	HINSTANCE hInstance = GetModuleHandle(NULL);
-	iconWork = (HICON)LoadImage(NULL, TEXT("work.ico"), IMAGE_ICON, 16, 16, LR_LOADFROMFILE);
-	iconPlay = (HICON)LoadImage(NULL, TEXT("play.ico"), IMAGE_ICON, 16, 16, LR_LOADFROMFILE);
+	iconWork  = (HICON)LoadImage(NULL, TEXT("work.ico" ), IMAGE_ICON, 16, 16, LR_LOADFROMFILE);
+	iconPlay  = (HICON)LoadImage(NULL, TEXT("play.ico" ), IMAGE_ICON, 16, 16, LR_LOADFROMFILE);
+	iconFlash = (HICON)LoadImage(NULL, TEXT("flash.ico"), IMAGE_ICON, 16, 16, LR_LOADFROMFILE);
 
-	working = false;
+	working = blinking = false;
 
 	WNDCLASSEX wcx;
 	wcx.cbSize = sizeof(wcx);
@@ -154,6 +194,8 @@ void main()
 	AppendMenu(hMenu, MF_STRING, ID_EDIT, "&Edit log");
 	AppendMenu(hMenu, MF_STRING, ID_REPORT, "Generate &report");
 	AppendMenu(hMenu, MF_STRING, ID_EXIT, "E&xit");
+
+	SetTimer(0, 0, 500, toysTimerProc);
 
     MSG msg;
     while (GetMessage(&msg, NULL, 0, 0))
