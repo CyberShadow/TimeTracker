@@ -118,6 +118,7 @@ void main()
 		else
 			throw new Exception("Unknown string " ~ line);
 	}
+	totals.length = days;
 	
 	string[] hours;
 	for (int i=0; i<24; i++)
