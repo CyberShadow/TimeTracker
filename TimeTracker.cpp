@@ -55,7 +55,7 @@ void quit()
 	ExitProcess(0);
 }
 
-void gen_report()
+bool gen_report()
 {
 	STARTUPINFO si;
 	PROCESS_INFORMATION pi;
@@ -65,11 +65,19 @@ void gen_report()
 	if (!CreateProcess(NULL, "GenReport.exe", NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi))
 	{
 		MessageBox(hWnd, "Failed to run GenReport.exe", "Error", MB_ICONERROR);
-		return;
+		return false;
 	}
 	WaitForSingleObject(pi.hProcess, INFINITE);
+	DWORD dwExitCode;
+	bool success = true;
+	if (!GetExitCodeProcess(pi.hProcess, &dwExitCode) || dwExitCode)
+	{
+		MessageBox(hWnd, "Report generation failed", "Error", MB_ICONERROR);
+		success = false;
+	}
 	CloseHandle(pi.hProcess);
 	CloseHandle(pi.hThread);
+	return success;
 }
 
 LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
@@ -105,8 +113,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 					ShellExecute(hWnd, "open", "worklog.txt", NULL, NULL, SW_SHOW);
 					break;
 				case ID_REPORT:
-					gen_report();
-					ShellExecute(hWnd, "open", "report.html", NULL, NULL, SW_SHOW);
+					if (gen_report())
+						ShellExecute(hWnd, "open", "report.html", NULL, NULL, SW_SHOW);
 					break;
 				case ID_EXIT:
 					quit();
