@@ -207,7 +207,7 @@ PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
       try {
         var d = document.createElement("div");
         d.appendChild(window.getSelection().getRangeAt(0).cloneContents());
-        s = $("s", d);
+        var s = $("s", d);
         
         var total = 0;
         $.each(s, function() {
