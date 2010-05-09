@@ -11,6 +11,7 @@ void main()
 	int days;
 	d_time start;
 	d_time[] totals;
+	d_time[24][] hourTotals;
 	d_time total;
 
 	struct Segment { d_time start, duration; string task; }
@@ -38,6 +39,20 @@ void main()
 		if (day >= totals.length)
 			totals.length = day+1;
 		totals[day] += stop - start;
+		
+		if (day >= hourTotals.length)
+			hourTotals.length = day+1;
+		int startHour = start % TicksPerDay / TicksPerHour;
+		int stopHour  = stop  % TicksPerDay / TicksPerHour;
+		if (startHour == stopHour)
+			hourTotals[day][startHour] += stop-start;
+		else
+		{
+			hourTotals[day][startHour] += TicksPerHour - (start % TicksPerHour);
+			for (int h=startHour+1; h < stopHour; h++)
+				hourTotals[day][h] += TicksPerHour;
+			hourTotals[day][stopHour ] += stop % TicksPerHour;
+		}
 		
 		total += stop-start;
 
@@ -118,7 +133,7 @@ void main()
 		else
 			throw new Exception("Unknown string " ~ line);
 	}
-	totals.length = days;
+	totals.length = hourTotals.length = days;
 	
 	string[] hours;
 	for (int i=0; i<24; i++)
@@ -129,8 +144,8 @@ void main()
 	{
 		d_time t = (firstDay + day) * TicksPerDay;
 		string row = format(`<td style="width: 149px"><code>%s %02d %s: %02d:%02d</code></td>`, weekdays[WeekDay(t)], DateFromTime(t), months[MonthFromTime(t)], HourFromTime(totals[day]), MinFromTime(totals[day]));
-		for (int i=0; i<24; i++)
-			row ~= `<td></td>`;
+		for (int h=0; h<24; h++)
+			row ~= format(`<td><s>%d</s>&#8203;</td>`, hourTotals[day][h] / TicksPerSecond);
 		rows ~= row;
 	}
 
@@ -178,8 +193,40 @@ PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
   }
   tr, td { margin: 0; padding: 0; }
   tr { height: 24px; }
+  s { display: none; }
   .box { position: relative; top: 3px; width: 1em; height: 1em; display: inline-block; }
   </style>
+  
+  <script src="http://dump.thecybershadow.net/10092eee563dec2dca82b77d2cf5a1ae/jquery-1.4.2.min.js"></script>
+  <!--[if IE]>
+  <script src="http://ierange.googlecode.com/svn/trunk/ierange.js"></script>
+  <![endif]-->
+  
+  <script type="text/javascript">
+    function update() {
+      try {
+        var d = document.createElement("div");
+        d.appendChild(window.getSelection().getRangeAt(0).cloneContents());
+        s = $("s", d);
+        
+        var total = 0;
+        $.each(s, function() {
+          total += parseInt(this.innerHTML);
+        });
+
+        if (total) {
+          var h = Math.floor(total / 3600);
+          var m = Math.floor(total / 60) % 60;
+          $("#selectedtotal").css("visibility", "visible").html("Selected: <code>" + h + ":" + (m>9 ? "" : "0") + m + "</code>");
+        } else
+          throw "Nothing is selected";
+      } catch(err) {
+        $("#selectedtotal").css("visibility", "hidden");
+      }
+    }
+
+    setInterval(update, 50);
+  </script>
 </head>
 <body>
   <div id="hours">
@@ -198,6 +245,7 @@ PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
    ` ~ join(taskLines, `
    `) ~ `
    <li>Total: <code>` ~ format(`%d:%02d`, total/TicksPerHour, total%TicksPerHour/TicksPerMinute) ~ `</code></li>
+   <li style="visibility: hidden" id="selectedtotal"></li>
   </ul>
 </body>
 </html>`;
