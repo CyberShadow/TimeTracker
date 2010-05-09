@@ -155,7 +155,7 @@ void main()
 
 	string[] taskLines;
 	foreach (t; tasks)
-		taskLines ~= format(`<li><div class="box" style="background-color: #%06X"></div> <code>%02d:%02d - %s</code></li>`, strcrc32(t.name)&0xFFFFFF, t.time/TicksPerHour, t.time%TicksPerHour/TicksPerMinute, t.name);
+		taskLines ~= format(`<li><div class="box" style="background-color: #%06X"></div> <code>%02d:%02d<s>%d</s> - %s</code></li>`, strcrc32(t.name)&0xFFFFFF, t.time/TicksPerHour, t.time%TicksPerHour/TicksPerMinute, t.time/TicksPerSecond, t.name);
 
 	string html = `
 <!DOCTYPE html
