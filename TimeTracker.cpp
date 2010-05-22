@@ -35,6 +35,11 @@ void toggle()
 	char* timestr = ctime(&t);
 	timestr[strlen(timestr)-1] = 0;
 	FILE* f = fopen("worklog.txt", "at");
+	if (!f)
+	{
+		MessageBox(hWnd, "Can't open worklog.txt", "Error", MB_ICONERROR);
+		return;
+	}
 	fprintf(f, "[%s] Work %s\n", timestr, working ? "started" : "stopped");
 	fclose(f);
 
