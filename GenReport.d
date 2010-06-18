@@ -22,19 +22,9 @@ void main()
 	Task[] tasks;
 	int[string] taskLookup;
 
-	void stopWork(d_time stop, int day)
+	void addSegment(d_time start, d_time stop, long day)
 	{
-		assert(start);
-		long startDay = start/TicksPerDay - firstDay;
-		if (day == startDay)
-			segments ~= Segment(start, stop-start, task);
-		else
-		{
-			if (day - startDay > 1)
-				throw new Exception("Work took longer than a day");
-			segments ~= Segment(start, (day+firstDay)*TicksPerDay - start, task);
-			segments ~= Segment((day+firstDay)*TicksPerDay, stop%TicksPerDay, task);
-		}
+		segments ~= Segment(start, stop-start, task);
 
 		if (day >= totals.length)
 			totals.length = day+1;
@@ -63,6 +53,21 @@ void main()
 		}
 		else
 			tasks[taskLookup[task]].time += stop - start;
+	}
+	
+	void stopWork(d_time stop, int day)
+	{
+		assert(start);
+		long startDay = start/TicksPerDay - firstDay;
+		if (day == startDay)
+			addSegment(start, stop, day);
+		else
+		{
+			if (day - startDay > 1)
+				throw new Exception("Work took longer than a day");
+			addSegment(start, (day+firstDay)*TicksPerDay, startDay);
+			addSegment((day+firstDay)*TicksPerDay, stop, day);
+		}
 
 		start = 0;
 	}
