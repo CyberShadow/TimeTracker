@@ -90,18 +90,10 @@ void main()
 
 	string[] lines = splitlines(cast(string)read("worklog.txt"));
 
-	// Add finishing line in case work is still ongoing
-	{
-		time_t t;
-		time(&t);
-		char* timestr = ctime(&t);
-		lines ~= format("[%s] End", strip(std.string.toString(timestr)));
-	}
-
-	foreach (line; lines)
+	void processLine(string line)
 	{
 		if (line.length==0 || line[0] != '[')
-			continue;
+			return;
 		line = line[1..$];
 		d_time time = parseTime(line[0..line.find("]")]);
 		if (firstDay == 0)
@@ -138,6 +130,18 @@ void main()
 		else
 			throw new Exception("Unknown string " ~ line);
 	}
+
+	foreach (line; lines)
+		processLine(line);
+
+	if (start) // stop work at current time
+	{
+		time_t t;
+		time(&t);
+		char* timestr = ctime(&t);
+		processLine(format("[%s] End", strip(std.string.toString(timestr))));
+	}
+
 	totals.length = hourTotals.length = days;
 	
 	string[] hours;
