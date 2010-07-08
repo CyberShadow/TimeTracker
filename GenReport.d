@@ -144,6 +144,12 @@ void main()
 
 	totals.length = hourTotals.length = days;
 	
+	string durationStr(d_time t)
+	{
+		t += TicksPerMinute / 2; // round minutes up
+		return format("%02d:%02d", t / TicksPerHour, MinFromTime(t));
+	}
+
 	string[] hours;
 	for (int i=0; i<24; i++)
 		hours ~= format(`<div style="left: %8.4f%%">%2d</div>`, i/24.0*100, i);
@@ -152,7 +158,7 @@ void main()
 	for (int day=0; day<days; day++)
 	{
 		d_time t = (firstDay + day) * TicksPerDay;
-		string row = format(`<td style="width: 149px"><code>%s %02d %s: %02d:%02d</code></td>`, weekdays[WeekDay(t)], DateFromTime(t), months[MonthFromTime(t)], HourFromTime(totals[day]), MinFromTime(totals[day]));
+		string row = format(`<td style="width: 149px"><code>%s %02d %s: %s</code></td>`, weekdays[WeekDay(t)], DateFromTime(t), months[MonthFromTime(t)], durationStr(totals[day]));
 		for (int h=0; h<24; h++)
 			row ~= format(`<td><s>%d</s>&#8203;</td>`, hourTotals[day][h] / TicksPerSecond);
 		rows ~= row;
@@ -164,7 +170,7 @@ void main()
 
 	string[] taskLines;
 	foreach (t; tasks)
-		taskLines ~= format(`<li><div class="box" style="background-color: #%06X"></div> <code>%02d:%02d<s>%d</s> - %s</code></li>`, strcrc32(t.name)&0xFFFFFF, t.time/TicksPerHour, t.time%TicksPerHour/TicksPerMinute, t.time/TicksPerSecond, t.name);
+		taskLines ~= format(`<li><div class="box" style="background-color: #%06X"></div> <code>%s<s>%d</s> - %s</code></li>`, strcrc32(t.name)&0xFFFFFF, durationStr(t.time), t.time/TicksPerSecond, t.name);
 
 	string html = `
 <!DOCTYPE html
@@ -253,7 +259,7 @@ PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
   <ul>
    ` ~ join(taskLines, `
    `) ~ `
-   <li>Total: <code>` ~ format(`%d:%02d`, total/TicksPerHour, total%TicksPerHour/TicksPerMinute) ~ `</code></li>
+   <li>Total: <code>` ~ durationStr(total) ~ `</code></li>
    <li style="visibility: hidden" id="selectedtotal"></li>
   </ul>
 </body>
