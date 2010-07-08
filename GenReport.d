@@ -230,6 +230,7 @@ PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
         });
 
         if (total) {
+          total += 30; // round minutes up
           var h = Math.floor(total / 3600);
           var m = Math.floor(total / 60) % 60;
           $("#selectedtotal").css("visibility", "visible").html("Selected: <code>" + h + ":" + (m>9 ? "" : "0") + m + "</code>");
