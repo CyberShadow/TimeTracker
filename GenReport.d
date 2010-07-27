@@ -212,7 +212,7 @@ PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
   .box { position: relative; top: 3px; width: 1em; height: 1em; display: inline-block; }
   </style>
   
-  <script src="http://dump.thecybershadow.net/10092eee563dec2dca82b77d2cf5a1ae/jquery-1.4.2.min.js"></script>
+  <script src="http://code.jquery.com/jquery-1.4.2.min.js"></script>
   <!--[if IE]>
   <script src="http://ierange.googlecode.com/svn/trunk/ierange.js"></script>
   <![endif]-->
