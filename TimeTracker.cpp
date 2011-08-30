@@ -132,22 +132,20 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 VOID CALLBACK toysTimerProc(HWND hwnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime)
 {
-	if (!working)
-		return;
 	if (blinking)
 	{
-		setIcon(iconWork);
+		setIcon(working ? iconWork : iconPlay);
 		blinking = false;
 	}
 	else
 	{
-		FILE* f = fopen("toys.txt", "rt");
+		FILE* f = fopen(working ? "toys.txt" : "tools.txt", "rt");
 		if (f==NULL)
 			return;
-		
+
 		char active[1024], line[1024];
 		GetWindowText(GetForegroundWindow(), active, 1024);
-		
+
 		while (fgets(line, 1024, f))
 		{
 			int l;
