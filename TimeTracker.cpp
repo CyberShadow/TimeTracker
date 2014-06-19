@@ -208,6 +208,19 @@ void main()
 
 	SetTimer(0, 0, 500, toysTimerProc);
 
+	{
+		int argc = 0;
+		LPWSTR *argv = CommandLineToArgvW(GetCommandLineW(), &argc);
+
+		for (int i=1; i<argc; i++)
+			if (!wcscmp(argv[i], L"/start"))
+				toggle();
+			else
+				MessageBoxW(hWnd, L"Ignoring unknown command-line parameter", argv[i], MB_ICONWARNING);
+
+		LocalFree(argv);
+	}
+
 	MSG msg;
 	while (GetMessage(&msg, NULL, 0, 0))
 	{
